@@ -1,0 +1,162 @@
+@ShowInWidget false
+@Icon image
+@Color darkorange
+Comment "Advanced Instagram downloader\nMade by /u/74Y3M\nTelegram: @ShortcutsApps\n\nVersion: 1.1.5"
+If value=s:shortcutinput
+Otherwise
+	GetClipboard -> mv:"Get Clipboard"
+End -> mv:If
+SetVariable Content
+Comment "Get content type. If safari web page, don't download any contents."
+GetType -> mv:"Get Type"
+If value="Safari web page"
+	GetVariable v:Content
+	AddtoVariable Webpage
+Otherwise
+	GetVariable v:Content
+	SetVariable URL
+	ReplaceText findText="(?:\\/p\\/|\\/tv\\/)" replaceWith=instaDownload caseSensitive=false regularExpression=true -> mv:"Replace Text"
+	If input=Contains value=instaDownload
+		GetVariable v:URL
+		GetContentsofURL advanced=false headers=true -> mv:"Get Contents of URL"
+		AddtoVariable Webpage
+	Otherwise
+		Comment "Detected profile link. Proceed with story downloads."
+		GetVariable v:URL
+		If value="instagram.com/"
+			MatchText pattern="[^/]+$" caseSensitive=false -> mv:"Match Text"
+		End -> mv:If1
+		Text "Enter username or hashtag or both. Each hashtag and user are separated by space or newline. You can also add ++ after username to download latest post by that user.\n\nExample:\n@instagram @topman++ #whatever" -> mv:Text
+		AskforInput question=mv:Text defaultAnswer="@\(mv:"Match Text")" -> mv:"Ask for Input"
+		SplitText separator="New Lines"
+		RepeatwithEach
+			SplitText separator=Spaces
+		End
+		RepeatwithEach
+			MatchText pattern="[^/@]+$" caseSensitive=false -> mv:"Match Text1"
+			SetVariable User
+			If value="#"
+				MatchText pattern="[^\\#]+$" caseSensitive=false -> mv:"Match Text2"
+				SetVariable "#"
+				URL "https://www.instagram.com/explore/tags/\(v:"#")" -> mv:URL
+				AddtoVariable Getpage
+			Otherwise
+				If value="++"
+					ReplaceText findText="++" replaceWith="" caseSensitive=false -> mv:"Replace Text1"
+					SetVariable User
+					URL "https://www.instagram.com/\(mv:"Replace Text1")"
+					AddtoVariable Getpage
+				End
+				URL "http://zasasa.com/en/download_instagram_stories.php" -> mv:URL1
+				GetContentsofURL advanced=false method=POST requestBody=Form formValues={url: v:User} -> mv:"Get Contents of URL1"
+				AddtoVariable Webpage
+			End -> mv:If2
+		End -> mv:"Repeat with Each"
+	End
+End -> mv:If3
+GetVariable v:Getpage
+Count Items -> mv:Count
+If input="Is Greater Than" number=0
+	GetVariable v:Getpage
+	GetContentsofURL -> mv:"Get Contents of URL2"
+	RepeatwithEach
+		MakeHTMLfromRichText -> mv:"Make HTML from Rich Text"
+		MatchText pattern="(?<=\"shortcode\":\")[^\"]+" caseSensitive=false -> mv:"Match Text3"
+		SetVariable Postcodes
+		Count Items -> mv:Count1
+		If input="Is Greater Than" number=20
+			GetVariable v:Postcodes
+			GetItemfromList get="Items in Range" toIndex=20 -> mv:"Get Item from List"
+			SetVariable Postcodes
+		End -> mv:If4
+		GetVariable v:Postcodes
+		RepeatwithEach
+			SetVariable post
+			URL "https://www.instagram.com/p/\(v:post)" -> mv:URL2
+			AddtoVariable Geturl
+		End -> mv:"Repeat with Each1"
+	End -> mv:"Repeat with Each2"
+	GetVariable v:Geturl
+	Count Items
+	If input="Is Greater Than" number=0
+		GetVariable v:Geturl
+		GetContentsofURL -> mv:"Get Contents of URL3"
+		AddtoVariable Webpage
+	End
+End
+Comment "Check if story or posts."
+GetVariable v:Webpage
+RepeatwithEach
+	If input=Contains value=instagram_stories
+		GetURLsfromInput -> mv:"Get URLs from Input"
+		CombineText separator="New Lines"
+		MatchText pattern="https?.*?cdninstagram.com/.*" caseSensitive=false
+		AddtoVariable Results
+	Otherwise
+		MakeHTMLfromRichText
+		SetVariable Data
+		MatchText pattern="(?s)(?<=display_).*?(?=should_log)" caseSensitive=false -> mv:"Match Text4"
+		RepeatwithEach
+			If value="\"is_video\":false"
+				MatchText pattern="(?<=url\":\")[^\"]+" caseSensitive=false -> mv:"Match Text5"
+				AddtoVariable List
+			End -> mv:If5
+		End -> mv:"Repeat with Each3"
+		GetVariable v:Data
+		MatchText pattern="(?<=\"video_url\":\")[^\"]+" caseSensitive=false -> mv:"Match Text6"
+		AddtoVariable List
+		GetVariable v:List
+		AddtoVariable Results
+		Nothing
+		SetVariable List
+	End -> mv:If6
+End -> mv:"Repeat with Each4"
+Comment "Remove any duplicate and blank lines from results."
+Text v:Results -> mv:Text1
+ReplaceText findText="\\u0026" replaceWith="&" caseSensitive=false regularExpression=true -> mv:"Replace Text2"
+ReplaceText findText="(?sm)(^[^\\r\\n]*)[\\r\\n](?=.*^\\1)" replaceWith="" caseSensitive=false regularExpression=true -> mv:"Replace Text3"
+ReplaceText findText="\\\\.*" replaceWith="" caseSensitive=false regularExpression=true -> mv:"Replace Text4"
+SplitText
+SetVariable Results
+Comment "If results have more than or equal to one link, proceed. Otherwise display error."
+Count Items -> mv:Count2
+If input="Is Greater Than" number=0
+	GetVariable v:Results
+Otherwise
+	ShowAlert title="Whoops 😬" message="Something went wrong. I'm sorry 😔 Try again maybe?" showCancelButton=false
+	ExitShortcut
+End -> mv:If7
+Comment "If links is more than three, let user know about total items."
+Count Items -> mv:Count3
+If input="Is Greater Than" number=3
+	VibrateDevice
+	ShowAlert title="Total \(mv:Count3) items!" message="Do you want to continue?"
+End -> mv:If8
+GetVariable v:URL
+If value="/tv/"
+	GetVariable v:Results
+	GetHeadersofURL -> mv:"Get Headers of URL"
+	GetDictionaryValue key="Content-Length" -> mv:"Get Dictionary Value"
+	FormatFileSize format=MB -> mv:"Format File Size"
+	ShowAlert title="Instagram TV 📺" message="\nFile size: \(mv:"Format File Size")\nContinue with download?"
+End
+GetVariable v:Results
+RepeatwithEach
+	MatchText pattern="[^\\/]+$" caseSensitive=false -> mv:"Match Text7"
+	ReplaceText findText="\\..*$" replaceWith="" caseSensitive=false regularExpression=true -> mv:"Replace Text5"
+	SetVariable Title
+	URL v:"Repeat Item" -> mv:URL3
+	Comment "Please hold on. Downloading..."
+	GetContentsofURL -> mv:"Get Contents of URL4"
+	SavetoPhotoAlbum -> mv:"Save to Photo Album"
+End
+SetVariable Files
+GetDetailsofFiles "File Size" -> mv:"Get Details of Files"
+FormatFileSize format=Bytes includeUnits=false
+CalculateStatistics Sum -> mv:"Calculate Statistics"
+FormatFileSize format=MB -> mv:"Format File Size1"
+VibrateDevice
+ShowAlert title="Done!" message="All stuff has been saved to photos.\n\nNew disk space use: \(mv:"Format File Size1")" showCancelButton=false
+Comment "If you enjoy using this shortcuts please consider a small donation every once in a while. It's optional but Your donation helps keep all the project alive.\nhttps://sayem.eu.org/donate"
+GetVariable v:Files
+QuickLook
