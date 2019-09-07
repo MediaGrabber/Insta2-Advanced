@@ -1,7 +1,7 @@
 @ShowInWidget false
 @Icon image
 @Color darkorange
-Comment "Advanced Instagram downloader\nMade by /u/74Y3M\nTelegram: @ShortcutsApps\n\nVersion: 1.1.5"
+Comment "Advanced Instagram downloader\nMade by /u/74Y3M\nTelegram: @ShortcutsApps\n\nVersion: 1.1.6"
 If value=s:shortcutinput
 Otherwise
 	GetClipboard -> mv:"Get Clipboard"
@@ -47,8 +47,9 @@ Otherwise
 					URL "https://www.instagram.com/\(mv:"Replace Text1")"
 					AddtoVariable Getpage
 				End
-				URL "http://zasasa.com/en/download_instagram_stories.php" -> mv:URL1
-				GetContentsofURL advanced=false method=POST requestBody=Form formValues={url: v:User} -> mv:"Get Contents of URL1"
+				URL "https://igstorie.com/\(v:User)" -> mv:URL1
+				MakeHTMLfromRichText -> mv:"Make HTML from Rich Text"
+				GetContentsofURL advanced=false -> mv:"Get Contents of URL1"
 				AddtoVariable Webpage
 			End -> mv:If2
 		End -> mv:"Repeat with Each"
@@ -60,7 +61,7 @@ If input="Is Greater Than" number=0
 	GetVariable v:Getpage
 	GetContentsofURL -> mv:"Get Contents of URL2"
 	RepeatwithEach
-		MakeHTMLfromRichText -> mv:"Make HTML from Rich Text"
+		MakeHTMLfromRichText -> mv:"Make HTML from Rich Text1"
 		MatchText pattern="(?<=\"shortcode\":\")[^\"]+" caseSensitive=false -> mv:"Match Text3"
 		SetVariable Postcodes
 		Count Items -> mv:Count1
@@ -90,11 +91,10 @@ RepeatwithEach
 	If input=Contains value=instagram_stories
 		GetURLsfromInput -> mv:"Get URLs from Input"
 		CombineText separator="New Lines"
-		MatchText pattern="https?.*?cdninstagram.com/.*" caseSensitive=false
+		MatchText pattern="https?.*?cdninstagram.com/.*dl=1" caseSensitive=false
 		AddtoVariable Results
 	Otherwise
-		MakeHTMLfromRichText
-		SetVariable Data
+		MakeHTMLfromRichText -> mv:"Make HTML from Rich Text2"
 		MatchText pattern="(?s)(?<=display_).*?(?=should_log)" caseSensitive=false -> mv:"Match Text4"
 		RepeatwithEach
 			If value="\"is_video\":false"
@@ -102,7 +102,7 @@ RepeatwithEach
 				AddtoVariable List
 			End -> mv:If5
 		End -> mv:"Repeat with Each3"
-		GetVariable v:Data
+		GetVariable mv:"Make HTML from Rich Text2"
 		MatchText pattern="(?<=\"video_url\":\")[^\"]+" caseSensitive=false -> mv:"Match Text6"
 		AddtoVariable List
 		GetVariable v:List
