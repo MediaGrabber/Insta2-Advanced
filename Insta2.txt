@@ -1,7 +1,7 @@
 @ShowInWidget false
 @Icon image
 @Color darkorange
-Comment "Advanced Instagram downloader\nMade by /u/74Y3M\nTelegram: @ShortcutsApps\n\nVersion: 1.1.6"
+Comment "Advanced Instagram downloader\nMade by /u/74Y3M\nTelegram: @ShortcutsApps\n\nVersion: 1.1.7"
 If value=s:shortcutinput
 Otherwise
 	GetClipboard -> mv:"Get Clipboard"
@@ -88,14 +88,12 @@ End
 Comment "Check if story or posts."
 GetVariable v:Webpage
 RepeatwithEach
-	If input=Contains value=instagram_stories
-		GetURLsfromInput -> mv:"Get URLs from Input"
-		CombineText separator="New Lines"
+	If input=Contains value="DOWNLOAD ALL STORIES"
 		MatchText pattern="https?.*?cdninstagram.com/.*dl=1" caseSensitive=false
 		AddtoVariable Results
 	Otherwise
 		MakeHTMLfromRichText -> mv:"Make HTML from Rich Text2"
-		MatchText pattern="(?s)(?<=display_).*?(?=should_log)" caseSensitive=false -> mv:"Match Text4"
+		MatchText pattern="(?s)(?<=display_).*?(?=tracking_token)" caseSensitive=false -> mv:"Match Text4"
 		RepeatwithEach
 			If value="\"is_video\":false"
 				MatchText pattern="(?<=url\":\")[^\"]+" caseSensitive=false -> mv:"Match Text5"
