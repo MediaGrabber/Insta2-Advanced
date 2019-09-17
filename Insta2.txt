@@ -1,7 +1,8 @@
+@ShowInShareSheet [safariwebpage]
 @ShowInWidget false
 @Icon image
 @Color darkorange
-Comment "Advanced Instagram downloader\nMade by /u/74Y3M\nTelegram: @ShortcutsApps\n\nVersion: 1.1.7"
+Comment "Advanced Instagram downloader\nMade by /u/74Y3M\nTelegram: @ShortcutsApps\n\nVersion: 1.1.8"
 If value=s:shortcutinput
 Otherwise
 	GetClipboard -> mv:"Get Clipboard"
@@ -111,7 +112,7 @@ RepeatwithEach
 End -> mv:"Repeat with Each4"
 Comment "Remove any duplicate and blank lines from results."
 Text v:Results -> mv:Text1
-ReplaceText findText="\\u0026" replaceWith="&" caseSensitive=false regularExpression=true -> mv:"Replace Text2"
+ReplaceText findText="\\u0026" replaceWith="&" caseSensitive=true regularExpression=false -> mv:"Replace Text2"
 ReplaceText findText="(?sm)(^[^\\r\\n]*)[\\r\\n](?=.*^\\1)" replaceWith="" caseSensitive=false regularExpression=true -> mv:"Replace Text3"
 ReplaceText findText="\\\\.*" replaceWith="" caseSensitive=false regularExpression=true -> mv:"Replace Text4"
 SplitText
